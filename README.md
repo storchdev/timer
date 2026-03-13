@@ -29,6 +29,7 @@ This installs:
 ```bash
 timer add "Take a break" "in 25 minutes"
 timer add "Team standup" "tomorrow 9:30am" -t 8000
+timer add "Send report" "today 5pm" --email "boss@company.com,team@company.com"
 timer list
 timer delete 1
 timer add-time 2 "10 minutes"
@@ -59,7 +60,9 @@ Default content:
 
 `notification_methods` is a comma-separated list. Supported values: `notify-send,email`.
 
-If `email` is included, the app sends from `email_address` to itself on port `587` with STARTTLS.
+If `email` is included in `notification_methods`, the app sends from `email_address` to itself on port `587` with STARTTLS.
+
+If you pass `--email` to `timer add`, that timer bypasses normal notification methods and sends a targeted email: `email_address` is the `To` recipient and the comma-separated `--email` addresses are deduplicated and added to `Cc`.
 
 ## Update
 

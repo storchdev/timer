@@ -32,12 +32,32 @@ def _format_countdown(seconds: int) -> str:
     return f"{sign}{secs}s"
 
 
+def _parse_email_targets(value: str) -> str:
+    unique_targets: list[str] = []
+    for chunk in value.split(","):
+        target = chunk.strip()
+        if not target or target in unique_targets:
+            continue
+        unique_targets.append(target)
+    return ",".join(unique_targets)
+
+
 def cmd_add(args: argparse.Namespace) -> int:
     due = parse_human_datetime(args.when)
     now = datetime.now()
     if due <= now:
         raise ValueError("Parsed time is not in the future.")
-    timer_id = add_timer(args.message, int(due.timestamp()), int(args.duration))
+    email_targets = ""
+    if args.email:
+        email_targets = _parse_email_targets(args.email)
+        if not email_targets:
+            raise ValueError("--email must include at least one email address.")
+    timer_id = add_timer(
+        args.message,
+        int(due.timestamp()),
+        int(args.duration),
+        email_targets,
+    )
     _ping_or_warn()
     print(f"Added timer {timer_id}: '{args.message}' at {due}")
     return 0
@@ -112,6 +132,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=0,
         help="Notify timeout in ms. 0 uses settings.json default.",
+    )
+    add_p.add_argument(
+        "--email",
+        default="",
+        help="Comma-separated email addresses for targeted email delivery.",
     )
     add_p.set_defaults(func=cmd_add)
 

@@ -7,7 +7,7 @@ import time
 from contextlib import suppress
 
 from timer.config import load_settings
-from timer.notify import send_notifications
+from timer.notify import send_notifications, send_targeted_email
 from timer.paths import CONFIG_DIR, PID_PATH
 from timer.storage import delete_timer, due_timers, next_due_ts
 
@@ -39,8 +39,12 @@ class TimerDaemon:
                 if row.duration_ms > 0
                 else settings.notification_duration_ms
             )
+            targeted_addresses = [addr for addr in row.email_targets.split(",") if addr]
             try:
-                await send_notifications(row.message, duration, settings)
+                if targeted_addresses:
+                    await send_targeted_email(row.message, targeted_addresses, settings)
+                else:
+                    await send_notifications(row.message, duration, settings)
             except Exception as exc:  # noqa: BLE001
                 print(f"Failed to deliver timer {row.id}: {exc}")
             finally:
